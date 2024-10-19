@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Together with Henry - Hla Hsu Registration and Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            color: black;
+            background-color: grey;
+        }
+        form {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            margin-top: 20px;
+            color: white;
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            width: 80%;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <h1>Learning Together with Henry</h1>
+    <form id="registrationForm">
+        <input type="text" id="username" placeholder="Username" required><br>
+        <input type="password" id="password" placeholder="Password" required><br>
+        <label for="userPhoto">Put the photo for your certificate:</label><br>
+        <input type="file" id="userPhoto" accept="image/*" required><br>
+        <button type="button" onclick="registerUser()">Register</button>
+    </form>
+
+    <form id="quizForm" style="display:none;">
+        <h2>Take the Quiz to Determine Your Rank</h2>
+        <div id="questionsContainer"></div>
+        <button type="button" onclick="submitQuiz()">Submit Quiz</button>
+    </form>
+
+    <p id="message"></p>
+
+    <script>
+        function registerUser() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const userPhoto = document.getElementById('userPhoto').files[0];
+
+            if (!username || !password || !userPhoto) {
+                document.getElementById('message').textContent = "Please fill out all fields and upload a photo.";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const newUser = { username: username, password: password, rank: 'Beginner', photo: e.target.result };
+                try {
+                    sessionStorage.setItem('currentUser', JSON.stringify(newUser));
+                    document.getElementById('message').textContent = "Registration successful! Welcome, " + username + "!";
+                    document.getElementById('registrationForm').style.display = 'none';
+                    document.getElementById('quizForm').style.display = 'block';
+                    loadQuizQuestions();
+                } catch (error) {
+                    document.getElementById('message').textContent = "Error registering user. Please ensure your browser allows session storage and try again.";
+                    console.error("Error storing user data: ", error);
+                }
+            };
+            reader.onerror = function () {
+                document.getElementById('message').textContent = "Error reading the photo. Please try again with a different image.";
+                console.error("FileReader error: ", reader.error);
+            };
+            reader.readAsDataURL(userPhoto);
+        }
+
+        function loadQuizQuestions() {
+            const questionsData = [
+                { question: "What is the purpose of earthing in an electrical system?", options: ["Maintain equipment at zero potential", "Provide a return path for current", "Reduce power losses", "Increase transmission voltage"], correct: "Maintain equipment at zero potential" },
+                { question: "What is Ohm's Law?", options: ["V = IR", "P = IV", "E = mc²"], correct: "V = IR" },
+                { question: "Which device is used to measure electric current?", options: ["Voltmeter", "Ammeter", "Ohmmeter"], correct: "Ammeter" },
+                { question: "What type of current is used in household electrical wiring?", options: ["Alternating Current (AC)", "Direct Current (DC)", "Mixed Current (AC/DC)"], correct: "Alternating Current (AC)" },
+                { question: "What is the unit of resistance?", options: ["Ohm", "Henry", "Farad"], correct: "Ohm" },
+                { question: "What is the principle of a transformer?", options: ["Electromagnetic induction", "Thermal conduction", "Chemical reaction", "Mechanical energy"], correct: "Electromagnetic induction" },
+                { question: "Which law is used to calculate magnetic force on a current-carrying conductor?", options: ["Faraday's Law", "Lenz's Law", "Ampere's Law", "Lorentz Force Law"], correct: "Lorentz Force Law" },
+                { question: "What is the power factor of a purely resistive circuit?", options: ["1", "0.5", "0", "-1"], correct: "1" },
+                { question: "In an RLC circuit, what happens at resonance?", options: ["Impedance is minimum", "Impedance is maximum", "Current is zero", "Voltage is zero"], correct: "Impedance is minimum" },
+                { question: "Which device is used to convert AC to DC?", options: ["Rectifier", "Inverter", "Transformer", "Capacitor"], correct: "Rectifier" }
+            ];
+
+            const questionsContainer = document.getElementById('questionsContainer');
+            questionsContainer.innerHTML = "";
+
+            questionsData.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container';
+
+                const questionLabel = document.createElement('label');
+                questionLabel.className = 'question-label';
+                questionLabel.textContent = `Question ${index + 1}: ${q.question}`;
+                questionDiv.appendChild(questionLabel);
+
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'options-container';
+
+                q.options.forEach((option, optionIndex) => {
+                    const optionLabel = document.createElement('label');
+                    optionLabel.className = 'option';
+                    const optionInput = document.createElement('input');
+                    optionInput.type = 'radio';
+                    optionInput.name = `q${index + 1}`;
+                    optionInput.value = option;
+                    if (optionIndex === 0) optionInput.required = true;
+                    optionLabel.appendChild(optionInput);
+                    optionLabel.appendChild(document.createTextNode(option));
+                    optionsContainer.appendChild(optionLabel);
+                });
+
+                questionDiv.appendChild(optionsContainer);
+                questionsContainer.appendChild(questionDiv);
+            });
+        }
+
+        function submitQuiz() {
+            const questionsData = [
+                { question: "What is the purpose of earthing in an electrical system?", correct: "Maintain equipment at zero potential" },
+                { question: "What is Ohm's Law?", correct: "V = IR" },
+                { question: "Which device is used to measure electric current?", correct: "Ammeter" },
+                { question: "What type of current is used in household electrical wiring?", correct: "Alternating Current (AC)" },
+                { question: "What is the unit of resistance?", correct: "Ohm" },
+                { question: "What is the principle of a transformer?", correct: "Electromagnetic induction" },
+                { question: "Which law is used to calculate magnetic force on a current-carrying conductor?", correct: "Lorentz Force Law" },
+                { question: "What is the power factor of a purely resistive circuit?", correct: "1" },
+                { question: "In an RLC circuit, what happens at resonance?", correct: "Impedance is minimum" },
+                { question: "Which device is used to convert AC to DC?", correct: "Rectifier" }
+            ];
+
+            let score = 0;
+
+            questionsData.forEach((q, index) => {
+                const userAnswer = document.querySelector(`input[name="q${index + 1}"]:checked`);
+                if (userAnswer && userAnswer.value === q.correct) {
+                    score++;
+                }
+            });
+
+            let rank = "Beginner";
+            if (score >= 8) {
+                rank = "Advanced";
+            } else if (score >= 5) {
+                rank = "Intermediate";
+            }
+
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (currentUser) {
+                const user = JSON.parse(currentUser);
+                user.rank = rank;
+                sessionStorage.setItem('currentUser', JSON.stringify(user));
+                document.getElementById('message').textContent = `Your rank is: ${rank}`;
+                generateCertificate(user);
+            }
+        }
+
+        async function generateCertificate(user) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+
+            const userPhoto = new Image();
+            userPhoto.src = user.photo;
+
+            userPhoto.onload = function() {
+                doc.setFontSize(24);
+                doc.setTextColor(0, 0, 255);
+                doc.text("Certificate of Completion", 60, 40);
+                doc.setFontSize(16);
+                doc.setTextColor(0, 0, 0);
+                doc.text("Presented to", 20, 60);
+                doc.setFontSize(20);
+                doc.setTextColor(0, 0, 128);
+                doc.text(user.username, 20, 70);
+                doc.setFontSize(16);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`For successfully completing the quiz with a rank of:`, 20, 90);
+                doc.setFontSize(18);
+                doc.setFont("Arial", "bold");
+                doc.setTextColor(255, 0, 0);
+                doc.text(user.rank, 20, 100);
+                doc.setFontSize(16);
+                doc.setFont("Arial", "normal");
+                doc.setTextColor(0, 0, 0);
+                doc.text("in the course", 20, 110);
+                doc.setFontSize(18);
+                doc.setTextColor(0, 128, 0);
+                doc.text("Learning Together with Henry", 20, 120);
+
+                // Adding user title
+                doc.setFontSize(16);
+                doc.setTextColor(0, 0, 0);
+                doc.text("Course Lecturer:", 20, 140);
+                doc.setFontSize(14);
+                doc.text("Mr. Hein Htet Lin,", 20, 150);
+                doc.text("B.E (Electrical Power, WYTU Myanmar)", 20, 160);
+                doc.text("M.E (Electrical and Computer Engineering, University of Windsor, Canada - Still Progressing)", 20, 170);
+                doc.text("Specialist Diploma in M&E Coordination (BCA, Singapore)", 20, 180);
+
+                doc.addImage(userPhoto, 'PNG', 230, 10, 40, 40);
+                doc.save(`${user.username}_certificate.pdf`);
+            };
+
+            userPhoto.onerror = function () {
+                document.getElementById('message').textContent = "Error loading the photo for the certificate. Please try registering again.";
+                console.error("Image load error: ", userPhoto.src);
+            };
+        }
+    </script>
+</body>
+</html>
